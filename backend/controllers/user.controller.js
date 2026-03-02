@@ -164,6 +164,7 @@ export const getUserProfile=async(req,res)=>{
         if(!user){
             return res.status(401).json({message:"Unauthorized"});
         }
+        const userProfile=await Profile.findOne({userId:user._id});
         return res.status(200).json({
             user:{
                 id:user._id,
