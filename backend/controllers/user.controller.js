@@ -2,15 +2,54 @@ import User from "../models/users.model.js";
 import Profile from "../models/profile.model.js";   // 🔥 Capital P
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-
+import PDFDocument from "pdfkit";
+import fs from "fs";
+const convertUserDataToPDF = async (userProfile) => {
+    const doc=new PDFDocument();
+    const outputPath=crypto.randomBytes(16).toString("hex")+".pdf";
+    const writeStream=fs.createWriteStream("uploads/"+outputPath);
+    doc.pipe(writeStream);
+    doc.fontSize(20).text(userProfile.userId.name,{align:"center"});
+    doc.moveDown();
+    doc.fontSize(14).text(`Username: ${userProfile.userId.username}`);
+    doc.text(`Bio: ${userProfile.bio}`);
+    doc.text(`Current Post: ${userProfile.currentPost}`);
+    if(userProfile.pastWork.length>0){
+        doc.moveDown();
+        doc.fontSize(16).text("Past Work:");
+        userProfile.pastWork.forEach((work,index)=>{
+            doc.fontSize(14).text(`${index+1}. Company: ${work.company}, Position: ${work.position}, Years: ${work.years}`);
+        });
+    }
+    if(userProfile.education.length>0){
+        doc.moveDown();
+        doc.fontSize(16).text("Education:");
+        userProfile.education.forEach((edu,index)=>{
+            doc.fontSize(14).text(`${index+1}. School: ${edu.school}, Degree: ${edu.degree}, Field of Study: ${edu.fieldOfStudy}`);
+        });
+    }
+    doc.end();
+    return new Promise((resolve,reject)=>{
+        writeStream.on("finish",()=>{
+            resolve(outputPath);
+        });
+        writeStream.on("error",(err)=>{
+            reject(err);
+        });
+    }); 
+}
 export const register = async (req, res) => {
     try {
         const { name, email, password, username } = req.body;
 
+        // 🔎 Validate required fields
         if (!name || !email || !password || !username) {
-            return res.status(400).json({ message: "All fields are required" });
+            return res.status(400).json({ 
+                message: "All fields are required" 
+            });
         }
 
+        // 🔎 Check if user already exists
         const existingUser = await User.findOne({
             $or: [{ email }, { username }]
         });
@@ -21,38 +60,43 @@ export const register = async (req, res) => {
             });
         }
 
+        // 🔐 Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // 👤 Create new user
         const newUser = new User({
             name,
             email,
             password: hashedPassword,
             username,
+            profilePicture: "default.jpg",
+            token: ""   // initialize empty token
         });
 
         await newUser.save();
 
-        // ✅ Create profile properly
+        // 📄 Create profile document
         const newProfile = new Profile({
-            userId: newUser._id,
+            userId: newUser._id
         });
 
         await newProfile.save();
 
         return res.status(201).json({
             message: "User registered successfully",
-            "token":crypto.randomBytes(64).toString("hex"),
-             user: {
+            user: {
                 id: newUser._id,
                 name: newUser.name,
                 email: newUser.email,
-                username: newUser.username,
-            }   
+                username: newUser.username
+            }
         });
 
     } catch (err) {
         console.error("Error in register controller:", err);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ 
+            message: "Server error" 
+        });
     }
 };
 
@@ -77,7 +121,8 @@ export const login = async (req, res) => {
             return res.status(400).json({ message: "Invalid email or password" });
         }
         const token=crypto.randomBytes(64).toString("hex");
-        await User.updateOne({_id:user._id},{$set:{token}});
+        user.token = token;
+        await user.save();
         // Generate token logic here (e.g., JWT)
         // const token = generateToken(user._id);
 
@@ -94,89 +139,198 @@ export const login = async (req, res) => {
 
 export const uploadProfilePicture = async (req, res) => {
     try {
-        const { token } = req.body;
+        const token = req.headers.authorization?.split(" ")[1];
 
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
         }
 
         const user = await User.findOne({ token });
 
         if (!user) {
-            return res.status(401).json({ message: "Unauthorized" });
+            return res.status(401).json({ message: "Invalid token" });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
         }
 
         user.profilePicture = req.file.filename;
         await user.save();
-        console.log(req.file);
 
         return res.status(200).json({
-            message: "Profile picture uploaded successfully"
+            message: "Profile picture uploaded successfully",
+            profilePicture: req.file.filename
         });
 
     } catch (err) {
-        console.error("Error in uploadProfilePicture controller:", err);
+        console.error("Error in uploadProfilePicture:", err);
         return res.status(500).json({ message: "Server error" });
     }
 };
 
-export const updateUserProfile=async(req,res)=>{
-    try{
-        const {token,...newUserData}=req.body;
-        const user=await User.findOne({token});
-        if(!user){
-            return res.status(401).json({message:"Unauthorized"});
-        }
-        const {username,email}=newUserData;
-        const existingUser=await User.findOne({
-            $or:[
-                {email},
-                {username}
-            ],
-            _id:{$ne:user._id}
-        });
-        if(existingUser){
-            return res.status(400).json({message:"Email or username already in use"});
-        }
-        Object.assign(user,newUserData);
-        await user.save();
-        return res.status(200).json({
-            message:"Profile updated successfully",
-            user:{
-                id:user._id,
-                name:user.name,
-                email:user.email,
-                username:user.username,
-                profilePicture:user.profilePicture,
-            }
-        });
-    }
-    catch(err){
-        console.error("Error in updateUserProfile controller:", err);
-        return res.status(500).json({ message: "Server error" });   
+export const updateUserProfile = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
 
-    }
-}
-export const getUserProfile=async(req,res)=>{
-    try{
-        const {token}=req.body;
-        const user=await User.findOne({token});
-        if(!user){
-            return res.status(401).json({message:"Unauthorized"});
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
         }
-        const userProfile=await Profile.findOne({userId:user._id});
+
+        const user = await User.findOne({ token });
+
+        if (!user) {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+
+        const { username, email, name } = req.body;
+
+        // 🔎 Check if username/email already exists for another user
+        if (username || email) {
+            const existingUser = await User.findOne({
+                $or: [
+                    username ? { username } : null,
+                    email ? { email } : null
+                ].filter(Boolean),
+                _id: { $ne: user._id }
+            });
+
+            if (existingUser) {
+                return res.status(400).json({
+                    message: "Email or username already in use"
+                });
+            }
+        }
+
+        // 🔐 Update only allowed fields
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (username) user.username = username;
+
+        await user.save();
+
         return res.status(200).json({
-            user:{
-                id:user._id,
-                name:user.name,
-                email:user.email,
-                username:user.username,
-                profilePicture:user.profilePicture,
+            message: "Profile updated successfully",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                username: user.username,
+                profilePicture: user.profilePicture
             }
         });
-    }
-    catch(err){
-        console.error("Error in getUserProfile controller:", err);
+
+    } catch (err) {
+        console.error("Error in updateUserProfile:", err);
         return res.status(500).json({ message: "Server error" });
     }
-}
+};
+export const getUserProfile = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        const user = await User.findOne({ token });
+
+        if (!user) {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+
+        const userProfile = await Profile.findOne({ userId: user._id });
+
+        return res.status(200).json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                username: user.username,
+                profilePicture: user.profilePicture
+            },
+            profile: userProfile
+        });
+
+    } catch (err) {
+        console.error("Error in getUserProfile:", err);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const updateProfileData = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        const user = await User.findOne({ token });
+
+        if (!user) {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+
+        const userProfile = await Profile.findOne({ userId: user._id });
+
+        if (!userProfile) {
+            return res.status(404).json({ message: "Profile not found" });
+        }
+
+        // ✅ Only update allowed fields
+        const { bio, currentPost, pastWork, education } = req.body;
+
+        if (bio !== undefined) userProfile.bio = bio;
+        if (currentPost !== undefined) userProfile.currentPost = currentPost;
+        if (pastWork !== undefined) userProfile.pastWork = pastWork;
+        if (education !== undefined) userProfile.education = education;
+
+        await userProfile.save();
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            profile: userProfile
+        });
+
+    } catch (err) {
+        console.error("Error in updateProfileData:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const getAllUserProfile=async(req,res)=>{
+    try {
+        const profiles = await Profile.find().populate("userId", "name username profile_Picture");
+        res.status(200).json(profiles);
+    } catch (err) {
+        console.error("Error in getAllUserProfile:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+export const downloadProfile = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const userProfile = await Profile.findOne({ userId })
+            .populate("userId", "name username profilePicture");
+
+        if (!userProfile) {
+            return res.status(404).json({ message: "Profile not found" });
+        }
+
+        const pdfBuffer = await convertUserDataToPDF(userProfile);
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            "attachment; filename=resume.pdf"
+        );
+
+        return res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error("Error in downloadProfile:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
