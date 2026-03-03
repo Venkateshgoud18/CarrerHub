@@ -34,7 +34,22 @@ const userSchema=new mongoose.Schema({
     token:{
         type:String,
         default:"",
-    }
+    },
+    connections: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default:[]
+        }
+    ],
+
+    connectionRequests: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default:[]
+        }
+    ]
 });
 
 const User=mongoose.model("User",userSchema);

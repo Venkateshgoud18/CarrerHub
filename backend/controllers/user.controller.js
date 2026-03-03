@@ -334,3 +334,127 @@ export const downloadProfile = async (req, res) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
+
+export const sendRequestConnection = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+        
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+        const user= await User.findOne({ token });
+        if (!user) {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+        const connectionUser= await User.findById(req.body.userId);
+        if (!connectionUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (connectionUser._id.equals(user._id)) {
+            return res.status(400).json({ message: "Cannot connect with yourself" });
+        }
+        if (connectionUser.connections.includes(user._id)) {
+            return res.status(400).json({ message: "Already connected" });
+        }
+        if (connectionUser.connectionRequests.includes(user._id)) {
+            return res.status(400).json({ message: "Connection request already sent" });
+        }
+        connectionUser.connectionRequests.push(user._id);
+        await connectionUser.save();
+        return res.status(200).json({ message: "Connection request sent successfully" });
+        
+    } catch (error) {
+        console.error("Error in sendRequestConnection:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const getConnectionsRequests = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+        
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+        const user= await User.findOne({ token }).populate("connectionRequests", "name username profile_Picture");
+        if (!user) {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+        return res.status(200).json({ connectionRequests: user.connectionRequests });
+        
+    } catch (error) {
+        console.error("Error in getConnectionsRequests:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const respondToConnectionRequest = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        const user = await User.findOne({ token });
+        if (!user) {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+
+        const { userId, accept } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        const connectionUser = await User.findById(userId);
+        if (!connectionUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // ❌ Cannot respond to yourself
+        if (user._id.equals(connectionUser._id)) {
+            return res.status(400).json({ message: "Invalid operation" });
+        }
+
+        // ✅ Check if request actually exists
+        const requestExists = user.connectionRequests.some(id =>
+            id.equals(connectionUser._id)
+        );
+
+        if (!requestExists) {
+            return res.status(400).json({
+                message: "No connection request from this user"
+            });
+        }
+
+        if (accept) {
+            // ✅ Add to connections (avoid duplicates)
+            if (!user.connections.some(id => id.equals(connectionUser._id))) {
+                user.connections.push(connectionUser._id);
+            }
+
+            if (!connectionUser.connections.some(id => id.equals(user._id))) {
+                connectionUser.connections.push(user._id);
+            }
+        }
+
+        // ✅ Remove from pending requests
+        user.connectionRequests = user.connectionRequests.filter(
+            id => !id.equals(connectionUser._id)
+        );
+
+        await user.save();
+        await connectionUser.save();
+
+        return res.status(200).json({
+            message: accept
+                ? "Connection request accepted"
+                : "Connection request rejected"
+        });
+
+    } catch (error) {
+        console.error("Error in respondToConnectionRequest:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
