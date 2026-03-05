@@ -7,6 +7,9 @@ export default function Dashboard() {
 
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [postText, setPostText] = useState("");
+const [media, setMedia] = useState<File | null>(null);
+const [posts, setPosts] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -25,6 +28,21 @@ export default function Dashboard() {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/get_allPosts");
+        const data = await res.json();
+  
+        setPosts(data.posts);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+  
+    fetchPosts();
+  }, []);
+
   // Filter users based on search
   const filteredUsers = users.filter((user) => {
     const name = user.userId?.name?.toLowerCase() || "";
@@ -34,6 +52,45 @@ export default function Dashboard() {
       username.includes(search.toLowerCase())
     );
   });
+  const handleCreatePost = async () => {
+    try {
+  
+      const token = localStorage.getItem("token");
+  
+      if (!token) {
+        alert("User not authenticated");
+        return;
+      }
+  
+      const formData = new FormData();
+      formData.append("body", postText);
+  
+      if (media) {
+        formData.append("media", media);
+      }
+  
+      const res = await fetch("http://localhost:5000/create", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        setPostText("");
+        setMedia(null);
+        alert("Post created");
+      } else {
+        alert(data.message);
+      }
+  
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900">
@@ -89,10 +146,11 @@ export default function Dashboard() {
             <p className="text-gray-600 text-sm mt-2">
               Welcome back 👋
             </p>
-
+            <Link href="/profile">
             <button className="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
               View Profile
             </button>
+            </Link>
           </div>
 
           <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -119,41 +177,62 @@ export default function Dashboard() {
         <div className="col-span-6 space-y-4">
 
           {/* Create Post */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
+          {/* Create Post */}
+<div className="bg-white p-4 rounded-lg shadow-sm">
 
-            <textarea
-              placeholder="Share something with your network..."
-              className="w-full border border-gray-300 bg-white text-gray-800 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+<textarea
+  placeholder="Share something with your network..."
+  value={postText}
+  onChange={(e) => setPostText(e.target.value)}
+  className="w-full border border-gray-300 bg-white text-gray-800 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+/>
 
-            <button className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
-              Post
-            </button>
+<input
+  type="file"
+  onChange={(e) => setMedia(e.target.files?.[0] || null)}
+  className="mt-2"
+/>
 
-          </div>
+<button
+  onClick={handleCreatePost}
+  className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+>
+  Post
+</button>
+
+</div>
 
           {/* Example Post */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
+          {posts.map((post) => (
+  <div key={post._id} className="bg-white p-4 rounded-lg shadow-sm">
 
-            <h4 className="font-semibold">
-              John Doe
-            </h4>
+    <h4 className="font-semibold">
+      {post.userId?.name}
+    </h4>
 
-            <p className="text-gray-600 text-sm">
-              Software Engineer
-            </p>
+    <p className="text-gray-600 text-sm">
+      {post.userId?.email}
+    </p>
 
-            <p className="mt-3">
-              Excited to start my new journey in full stack development 🚀
-            </p>
+    <p className="mt-3">
+      {post.body}
+    </p>
 
-            <div className="flex gap-6 mt-4 text-gray-600 text-sm">
-              <button className="hover:text-blue-600">Like</button>
-              <button className="hover:text-blue-600">Comment</button>
-              <button className="hover:text-blue-600">Share</button>
-            </div>
+    {post.media && (
+      <img
+        src={`http://localhost:5000/${post.media}`}
+        className="mt-3 rounded-md"
+      />
+    )}
 
-          </div>
+    <div className="flex gap-6 mt-4 text-gray-600 text-sm">
+      <button className="hover:text-blue-600">Like</button>
+      <button className="hover:text-blue-600">Comment</button>
+      <button className="hover:text-blue-600">Share</button>
+    </div>
+
+  </div>
+))}
 
         </div>
 
