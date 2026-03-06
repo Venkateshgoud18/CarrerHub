@@ -260,6 +260,7 @@ export const getUserProfile = async (req, res) => {
 
 export const updateProfileData = async (req, res) => {
     try {
+
         const token = req.headers.authorization?.split(" ")[1];
 
         if (!token) {
@@ -278,13 +279,35 @@ export const updateProfileData = async (req, res) => {
             return res.status(404).json({ message: "Profile not found" });
         }
 
-        // ✅ Only update allowed fields
         const { bio, currentPost, pastWork, education } = req.body;
 
-        if (bio !== undefined) userProfile.bio = bio;
-        if (currentPost !== undefined) userProfile.currentPost = currentPost;
-        if (pastWork !== undefined) userProfile.pastWork = pastWork;
-        if (education !== undefined) userProfile.education = education;
+        if (bio !== undefined) {
+            userProfile.bio = bio;
+        }
+
+        if (currentPost !== undefined) {
+            userProfile.currentPost = currentPost;
+        }
+
+        if (pastWork !== undefined) {
+
+            userProfile.pastWork = pastWork.map((work) => ({
+                company: work.company || "",
+                position: work.position || "",
+                years: work.years || ""
+            }));
+
+        }
+
+        if (education !== undefined) {
+
+            userProfile.education = education.map((edu) => ({
+                school: edu.school || "",
+                degree: edu.degree || "",
+                fieldOfStudy: edu.fieldOfStudy || ""
+            }));
+
+        }
 
         await userProfile.save();
 
@@ -294,8 +317,13 @@ export const updateProfileData = async (req, res) => {
         });
 
     } catch (err) {
+
         console.error("Error in updateProfileData:", err);
-        res.status(500).json({ message: "Server error" });
+
+        res.status(500).json({
+            message: err.message
+        });
+
     }
 };
 
@@ -310,6 +338,7 @@ export const getAllUserProfile=async(req,res)=>{
 };
 export const downloadProfile = async (req, res) => {
     try {
+
         const userId = req.params.id;
 
         const userProfile = await Profile.findOne({ userId })
@@ -319,15 +348,15 @@ export const downloadProfile = async (req, res) => {
             return res.status(404).json({ message: "Profile not found" });
         }
 
-        const pdfBuffer = await convertUserDataToPDF(userProfile);
+        const pdfPath = await convertUserDataToPDF(userProfile);
 
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader(
-            "Content-Disposition",
-            "attachment; filename=resume.pdf"
-        );
+        const fullPath = `uploads/${pdfPath}`;
 
-        return res.send(pdfBuffer);
+        res.download(fullPath, "resume.pdf", (err) => {
+            if (err) {
+                console.error("Download error:", err);
+            }
+        });
 
     } catch (error) {
         console.error("Error in downloadProfile:", error);

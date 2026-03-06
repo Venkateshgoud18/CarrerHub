@@ -7,10 +7,20 @@ export default function ProfilePage() {
 
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
 
+  const [formData, setFormData] = useState({
+    bio: "",
+    currentPost: "",
+    pastWork: "",
+    education: ""
+  });
+
   useEffect(() => {
+
     const fetchProfile = async () => {
+
       try {
 
         const token = localStorage.getItem("token");
@@ -27,29 +37,128 @@ export default function ProfilePage() {
           },
         });
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch profile");
-        }
-
         const data = await res.json();
-        console.log("Profile API:", data);
 
         setProfileData(data);
 
+        setFormData({
+          bio: data?.profile?.bio || "",
+          currentPost: data?.profile?.currentPost || "",
+
+          pastWork:
+            data?.profile?.pastWork
+              ?.map((work: any) => work.company)
+              .join(", ") || "",
+
+          education:
+            data?.profile?.education
+              ?.map((edu: any) => edu.school)
+              .join(", ") || ""
+        });
+
       } catch (err: any) {
-        console.error("Error fetching profile:", err);
-        setError(err.message || "Something went wrong");
+
+        setError(err.message);
+
       } finally {
+
         setLoading(false);
+
       }
+
     };
 
     fetchProfile();
+
   }, []);
+
+  const handleChange = (e: any) => {
+
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+
+  };
+
+  const handleUpdate = async () => {
+
+    try {
+
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("http://localhost:5000/update_profile_data", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+
+        body: JSON.stringify({
+
+          bio: formData.bio,
+          currentPost: formData.currentPost,
+
+          pastWork: formData.pastWork
+            ? formData.pastWork.split(",").map((company) => ({
+                company: company.trim(),
+                position: "",
+                years: ""
+              }))
+            : [],
+
+          education: formData.education
+            ? formData.education.split(",").map((school) => ({
+                school: school.trim(),
+                degree: "",
+                fieldOfStudy: ""
+              }))
+            : []
+
+        })
+
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message);
+      }
+
+      setProfileData({
+        ...profileData,
+        profile: data.profile
+      });
+
+      setEditing(false);
+
+    } catch (err: any) {
+
+      alert(err.message);
+
+    }
+
+  };
+
+  const handleDownloadResume = () => {
+
+    const userId = profileData?.profile?.userId;
+  
+    if (!userId) {
+      alert("User ID not found");
+      return;
+    }
+  
+    window.open(
+      `http://localhost:5000/user/download_resume/${userId}`,
+      "_blank"
+    );
+  
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen text-lg">
+      <div className="flex justify-center items-center h-screen text-black">
         Loading profile...
       </div>
     );
@@ -67,28 +176,25 @@ export default function ProfilePage() {
   const profile = profileData?.profile;
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900">
+
+    <div className="min-h-screen bg-gray-100 text-black">
 
       {/* Navbar */}
-      <nav className="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
+      <nav className="bg-white shadow px-8 py-4 flex justify-between">
 
         <Link href="/dashboard" className="text-blue-600 font-bold text-xl">
           CareerHub
         </Link>
 
-        <Link
-          href="/dashboard"
-          className="text-gray-700 hover:text-blue-600 font-medium"
-        >
+        <Link href="/dashboard" className="text-gray-700 hover:text-blue-600">
           Dashboard
         </Link>
 
       </nav>
 
-      {/* Profile Container */}
       <div className="max-w-4xl mx-auto mt-10 px-4">
 
-        <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="bg-white shadow rounded-lg p-6">
 
           {/* Profile Header */}
           <div className="flex items-center gap-6">
@@ -99,21 +205,20 @@ export default function ProfilePage() {
                   ? `http://localhost:5000/uploads/${user.profilePicture}`
                   : "https://via.placeholder.com/100"
               }
-              alt="profile"
               className="w-24 h-24 rounded-full object-cover border"
             />
 
             <div>
 
-              <h2 className="text-2xl font-bold text-black">
-                {user?.name || "Unknown User"}
+              <h2 className="text-2xl font-bold">
+                {user?.name}
               </h2>
 
               <p className="text-gray-600">
-                @{user?.username || "username"}
+                @{user?.username}
               </p>
 
-              <p className="text-gray-500 text-sm">
+              <p className="text-sm text-gray-500">
                 {user?.email}
               </p>
 
@@ -121,69 +226,151 @@ export default function ProfilePage() {
 
           </div>
 
+          {/* Buttons */}
+          <div className="mt-4 flex gap-3">
+
+            <button
+              onClick={() => setEditing(!editing)}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              {editing ? "Cancel" : "Edit Profile"}
+            </button>
+
+            <button
+              onClick={handleDownloadResume}
+              className="bg-green-600 text-white px-4 py-2 rounded"
+            >
+              Download Resume
+            </button>
+
+          </div>
+
           {/* Bio */}
           <div className="mt-6">
 
             <h3 className="font-semibold text-lg mb-2">
-              About
+              Bio
             </h3>
 
-            <p className="text-gray-700">
-              {profile?.bio || "No bio added yet."}
-            </p>
+            {editing ? (
+
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                className="w-full border p-2 rounded bg-white text-black"
+              />
+
+            ) : (
+
+              <p className="text-gray-700">
+                {profile?.bio || "No bio added"}
+              </p>
+
+            )}
 
           </div>
 
-          {/* Profile Details */}
-          <div className="mt-6 grid grid-cols-2 gap-4">
+          {/* Current Role */}
+          <div className="mt-4">
 
-            <div>
+            <h3 className="font-semibold">
+              Current Role
+            </h3>
 
-              <h4 className="font-semibold">
-                Current Role
-              </h4>
+            {editing ? (
 
-              <p className="text-gray-600">
+              <input
+                name="currentPost"
+                value={formData.currentPost}
+                onChange={handleChange}
+                className="border p-2 rounded w-full bg-white text-black"
+              />
+
+            ) : (
+
+              <p className="text-gray-700">
                 {profile?.currentPost || "Not specified"}
               </p>
 
-            </div>
+            )}
 
-            <div>
+          </div>
 
-              <h4 className="font-semibold">
-                Past Work
-              </h4>
+          {/* Past Work */}
+          <div className="mt-4">
 
-              <p className="text-gray-600">
+            <h3 className="font-semibold">
+              Past Work
+            </h3>
+
+            {editing ? (
+
+              <input
+                name="pastWork"
+                value={formData.pastWork}
+                onChange={handleChange}
+                className="border p-2 rounded w-full bg-white text-black"
+              />
+
+            ) : (
+
+              <p className="text-gray-700">
                 {profile?.pastWork?.length > 0
-                  ? profile.pastWork.join(", ")
+                  ? profile.pastWork.map((w: any) => w.company).join(", ")
                   : "Not specified"}
               </p>
 
-            </div>
+            )}
 
           </div>
 
-          {/* Education Section */}
-          <div className="mt-6">
+          {/* Education */}
+          <div className="mt-4">
 
-            <h4 className="font-semibold">
+            <h3 className="font-semibold">
               Education
-            </h4>
+            </h3>
 
-            <p className="text-gray-600">
-              {profile?.education?.length > 0
-                ? profile.education.join(", ")
-                : "Not specified"}
-            </p>
+            {editing ? (
+
+              <input
+                name="education"
+                value={formData.education}
+                onChange={handleChange}
+                className="border p-2 rounded w-full bg-white text-black"
+              />
+
+            ) : (
+
+              <p className="text-gray-700">
+                {profile?.education?.length > 0
+                  ? profile.education.map((e: any) => e.school).join(", ")
+                  : "Not specified"}
+              </p>
+
+            )}
 
           </div>
+
+          {/* Save Button */}
+          {editing && (
+
+            <button
+              onClick={handleUpdate}
+              className="mt-6 bg-green-600 text-white px-6 py-2 rounded"
+            >
+              Save Changes
+            </button>
+
+          )}
 
         </div>
 
       </div>
 
     </div>
+
   );
+
 }
