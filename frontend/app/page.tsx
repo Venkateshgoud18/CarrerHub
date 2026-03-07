@@ -158,8 +158,9 @@ export default function Home() {
             </h2>
 
             <p className="text-gray-600 mb-6">
-              Thousands of professionals are already using CareerHub
-              to connect, collaborate and grow their careers.
+              Thousands of professionals are already using CareerHub to connect,
+              share knowledge, and grow their careers. Join us today and be part
+              of a thriving community.
             </p>
 
             <Link
