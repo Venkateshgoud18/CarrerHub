@@ -28,15 +28,25 @@ export const createPost=async(req,res)=>{
         return res.status(500).json({message:"Internal server error"});
     }
 } ;
-export const getAllPosts=async(req,res)=>{
-    try{
-        const posts=await Post.find().populate("userId","name email");
-        return res.status(200).json({posts:posts});
-    }catch(error){
-        console.error("Error fetching posts:",error);
-        return res.status(500).json({message:"Internal server error"});
+export const getAllPosts = async (req, res) => {
+    try {
+  
+      const posts = await Post.find()
+        .populate("userId", "name email")
+        .populate("comments.userId", "name email")   // IMPORTANT
+        .sort({ createdAt: -1 });
+  
+      res.status(200).json({
+        posts
+      });
+  
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      res.status(500).json({
+        message: "Internal server error"
+      });
     }
-}  ;
+  };
 export const deletePost=async(req,res)=>{
     const token=req.headers.authorization?.split(" ")[1];
     if(!token){
@@ -97,6 +107,30 @@ export const commentPost = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
+export const getUserPostComments = async (req, res) => {
+    try {
+      const userId = req.params.userId;
+  
+      const posts = await Post.find({ userId })
+        .populate("comments.userId", "name email");
+  
+      // collect all comments
+      const comments = posts.flatMap(post =>
+        post.comments.map(c => ({
+          postId: post._id,
+          user: c.userId,
+          comment: c.comment,
+          createdAt: c.createdAt
+        }))
+      );
+  
+      res.status(200).json({ comments });
+  
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
 export const deleteComment = async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -142,8 +176,7 @@ export const deleteComment = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
-
-export const incrementLikes = async (req, res) => {
+export const toggleLike = async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -151,26 +184,30 @@ export const incrementLikes = async (req, res) => {
     }
 
     try {
+
         const user = await User.findOne({ token });
-        if (!user) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
 
         const post = await Post.findById(req.params.id);
-        if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+
+        const alreadyLiked = post.likedBy.includes(user._id);
+
+        if (alreadyLiked) {
+            post.likes -= 1;
+            post.likedBy.pull(user._id);
+        } else {
+            post.likes += 1;
+            post.likedBy.push(user._id);
         }
 
-        post.likes += 1;
         await post.save();
 
         return res.status(200).json({
-            message: "Like added successfully",
-            post
+            post,
+            liked: !alreadyLiked
         });
 
     } catch (error) {
-        console.error("Error liking post:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        console.error(error);
+        res.status(500).json({ message:"Internal server error" });
     }
 };

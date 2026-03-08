@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FaRegHeart, FaRegCommentDots, FaShare } from "react-icons/fa";
+import PostLike from "./postLike";
+import PostComment from "./commentBox";
+
 
 export default function Dashboard() {
 
@@ -10,6 +14,24 @@ export default function Dashboard() {
   const [postText, setPostText] = useState("");
 const [media, setMedia] = useState<File | null>(null);
 const [posts, setPosts] = useState<any[]>([]);
+const [showComment, setShowComment] = useState(false);
+const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
+const [comments, setComments] = useState<{ [key: string]: any[] }>({});
+
+const fetchComments = async (postId: string) => {
+  try {
+    const res = await fetch(`http://localhost:5000/get_UserComments/${postId}`);
+    const data = await res.json();
+
+    setComments((prev) => ({
+      ...prev,
+      [postId]: data.comments
+    }));
+
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+  }
+};
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -219,17 +241,52 @@ const [posts, setPosts] = useState<any[]>([]);
     </p>
 
     {post.media && (
-      <img
-        src={`http://localhost:5000/${post.media}`}
-        className="mt-3 rounded-md"
-      />
-    )}
+  <img
+    src={`http://localhost:5000/${post.media}`}
+    className="mt-3 rounded-md w-full"
+  />
+)}
 
-    <div className="flex gap-6 mt-4 text-gray-600 text-sm">
-      <button className="hover:text-blue-600">Like</button>
-      <button className="hover:text-blue-600">Comment</button>
-      <button className="hover:text-blue-600">Share</button>
+<div className="flex gap-6 mt-4 text-gray-600 text-sm items-center">
+
+      <PostLike post={post} />
+
+      <button
+  onClick={() => {
+    setActiveCommentPostId(
+      activeCommentPostId === post._id ? null : post._id
+    );
+
+    fetchComments(post._id);
+  }}
+  className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 hover:text-blue-600 transition"
+>
+  <FaRegCommentDots size={16} />
+  Comment
+</button>
+
+      <button className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 hover:text-blue-600 transition">
+        <FaShare size={16} />
+        Share
+      </button>
+
     </div>
+
+    {/* Comment Box */}
+    {activeCommentPostId === post._id && (
+  <div className="mt-4 space-y-3">
+
+{post.comments?.map((c: any) => (
+  <div key={c._id} className="bg-gray-100 rounded-md p-2 text-sm">
+    <p className="font-semibold">{c.userId?.name}</p>
+    <p>{c.comment}</p>
+  </div>
+))}
+
+    <PostComment post={post} />
+
+  </div>
+)}
 
   </div>
 ))}

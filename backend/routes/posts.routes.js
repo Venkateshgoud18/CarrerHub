@@ -5,7 +5,8 @@ import { getAllPosts } from "../controllers/post.controller.js";
 import { deletePost } from "../controllers/post.controller.js";
 import { commentPost } from "../controllers/post.controller.js";
 import { deleteComment } from "../controllers/post.controller.js";
-import { incrementLikes } from "../controllers/post.controller.js";
+import { toggleLike } from "../controllers/post.controller.js";
+import { getUserPostComments } from "../controllers/post.controller.js";
 import multer from "multer";
 const router=Router();
 const storage=multer.diskStorage({
@@ -22,6 +23,7 @@ router.route("/create").post(upload.single("media"),createPost);
 router.route("/get_allPosts").get(getAllPosts);
 router.route("/delete/:id").delete(deletePost);
 router.route("/comment/:id").post(commentPost);
+router.route("/get_UserComments/:id").get(getUserPostComments);
 router.route("/delete_comment/:postId/:commentId").delete(deleteComment);
-router.route("/like/:id").post(incrementLikes);
+router.route("/like/:id").post(toggleLike);
 export default router;
