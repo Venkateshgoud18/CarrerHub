@@ -205,15 +205,15 @@ useEffect(() => {
             </h3>
 
             <ul className="text-gray-700 space-y-2 text-sm">
-              <li className="hover:text-blue-600 cursor-pointer">
-                My Connections
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer">
-                Saved Posts
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer">
-                Messages
-              </li>
+            <li className="hover:text-blue-600 cursor-pointer">
+            My Connections ({currentUser?.connections?.length ?? 0})
+</li>
+<li className="hover:text-blue-600 cursor-pointer">
+  Connection Requests ({currentUser?.connectionRequests?.length ?? 0})
+</li>
+<li className="hover:text-blue-600 cursor-pointer">
+  Saved Posts ({currentUser?.savedPosts?.length ?? 0})
+</li>
             </ul>
           </div>
 

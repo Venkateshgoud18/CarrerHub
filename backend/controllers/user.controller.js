@@ -227,36 +227,42 @@ export const updateUserProfile = async (req, res) => {
 };
 export const getUserProfile = async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(" ")[1];
-
-        if (!token) {
-            return res.status(401).json({ message: "No token provided" });
-        }
-
-        const user = await User.findOne({ token });
-
-        if (!user) {
-            return res.status(401).json({ message: "Invalid token" });
-        }
-
-        const userProfile = await Profile.findOne({ userId: user._id });
-
-        return res.status(200).json({
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                username: user.username,
-                profilePicture: user.profilePicture
-            },
-            profile: userProfile
-        });
-
+  
+      const token = req.headers.authorization?.split(" ")[1];
+  
+      if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+  
+      const user = await User.findOne({ token });
+  
+      if (!user) {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+  
+      const userProfile = await Profile.findOne({ userId: user._id });
+  
+      return res.status(200).json({
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          username: user.username,
+          profilePicture: user.profilePicture,
+          connections: user.connections,
+          connectionRequests: user.connectionRequests
+        },
+        profile: userProfile
+      });
+  
     } catch (err) {
-        console.error("Error in getUserProfile:", err);
-        return res.status(500).json({ message: "Server error" });
+  
+      console.error("Error in getUserProfile:", err);
+  
+      return res.status(500).json({ message: "Server error" });
+  
     }
-};
+  };
 
 export const updateProfileData = async (req, res) => {
     try {
