@@ -10,6 +10,7 @@ import PostComment from "./commentBox";
 export default function Dashboard() {
 
   const [users, setUsers] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [postText, setPostText] = useState("");
 const [media, setMedia] = useState<File | null>(null);
@@ -32,6 +33,32 @@ const fetchComments = async (postId: string) => {
     console.error("Error fetching comments:", error);
   }
 };
+useEffect(() => {
+  const fetchCurrentUser = async () => {
+    try {
+
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      const res = await fetch("http://localhost:5000/get_user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      setCurrentUser(data.user);
+
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    }
+  };
+
+  fetchCurrentUser();
+}, []);
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -160,14 +187,11 @@ const fetchComments = async (postId: string) => {
 
           <div className="bg-white p-4 rounded-lg shadow-sm">
           <Link href="/profile">
-  <h2 className="font-semibold text-lg hover:text-blue-600 cursor-pointer">
-    Your Profile
-  </h2>
 </Link>
 
-            <p className="text-gray-600 text-sm mt-2">
-              Welcome back 👋
-            </p>
+<p className="text-gray-600 text-sm mt-2">
+  Welcome back 👋 {currentUser?.name}
+</p>
             <Link href="/profile">
             <button className="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
               View Profile

@@ -9,6 +9,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
+  const [profileImage, setProfileImage] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     bio: "",
@@ -16,6 +17,47 @@ export default function ProfilePage() {
     pastWork: "",
     education: ""
   });
+  const handleImageChange = (e: any) => {
+    setProfileImage(e.target.files[0]);
+  };
+
+  const handleUploadProfilePic = async () => {
+    try {
+      const token = localStorage.getItem("token");
+  
+      if (!profileImage) {
+        alert("Please select an image");
+        return;
+      }
+  
+      const formData = new FormData();
+      formData.append("profilePicture", profileImage);
+  
+      const res = await fetch("http://localhost:5000/update_profile_picture", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) throw new Error(data.message);
+  
+      alert("Profile picture updated!");
+  
+      setProfileData({
+        ...profileData,
+        user: {
+          ...profileData.user,
+          profilePicture: data.profilePicture,
+        },
+      });
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
 
   useEffect(() => {
 
@@ -242,6 +284,24 @@ export default function ProfilePage() {
             >
               Download Resume
             </button>
+            <label className="bg-purple-600 text-white px-4 py-2 rounded cursor-pointer">
+    Change Profile Picture
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handleImageChange}
+      className="hidden"
+    />
+  </label>
+
+  {profileImage && (
+    <button
+      onClick={handleUploadProfilePic}
+      className="bg-black text-white px-4 py-2 rounded"
+    >
+      Upload
+    </button>
+  )}
 
           </div>
 

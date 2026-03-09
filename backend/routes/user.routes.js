@@ -20,7 +20,7 @@ const storage=multer.diskStorage({
     }
 });
 const upload=multer({storage:storage});
-router.route("/update_profile_picture").post(upload.single("profile_Picture"),uploadProfilePicture);
+router.route("/update_profile_picture").post(upload.single("profilePicture"),uploadProfilePicture);
    
 router.route("/register").post(register);
 router.route("/login").post(login);
