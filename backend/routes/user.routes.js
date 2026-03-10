@@ -9,6 +9,7 @@ import { downloadProfile } from "../controllers/user.controller.js";
 import { sendRequestConnection } from "../controllers/user.controller.js";
 import { getConnectionsRequests } from "../controllers/user.controller.js";
 import { respondToConnectionRequest } from "../controllers/user.controller.js";
+import { getConnections } from "../controllers/user.controller.js";
 import multer from "multer";
 const router=Router();
 const storage=multer.diskStorage({
@@ -31,5 +32,6 @@ router.route("/user/get_all_users").get(getAllUserProfile);
 router.route("/user/download_resume/:id").get(downloadProfile);
 router.route("/user/send_request_connection").post(sendRequestConnection);
 router.route("/user/get_connections_requests").get(getConnectionsRequests);
+router.route("/user/get_connections").get(getConnections);
 router.route("/user/respond_to_connection_request").post(respondToConnectionRequest);
 export default router;

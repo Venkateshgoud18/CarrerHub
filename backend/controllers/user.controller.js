@@ -423,6 +423,32 @@ export const getConnectionsRequests = async (req, res) => {
     }
 };
 
+export const getConnections = async (req, res) => {
+    try {
+  
+      const token = req.headers.authorization?.split(" ")[1];
+  
+      if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+  
+      const user = await User.findOne({ token })
+        .populate("connections", "name username profile_Picture");
+  
+      if (!user) {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+  
+      return res.status(200).json({
+        connections: user.connections,
+      });
+  
+    } catch (error) {
+      console.error("Error in getConnections:", error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  };
+
 export const respondToConnectionRequest = async (req, res) => {
     try {
         const token = req.headers.authorization?.split(" ")[1];
