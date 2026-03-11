@@ -33,6 +33,36 @@ const fetchComments = async (postId: string) => {
     console.error("Error fetching comments:", error);
   }
 };
+const handleConnect = async (userId: string) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("User not authenticated");
+      return;
+    }
+
+    const res = await fetch("http://localhost:5000/user/send_request_connection", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert(data.message);
+    } else {
+      alert(data.message);
+    }
+
+  } catch (error) {
+    console.error("Connection request error:", error);
+  }
+};
 useEffect(() => {
   const fetchCurrentUser = async () => {
     try {
@@ -341,9 +371,12 @@ useEffect(() => {
                     {user.userId?.name || user.userId?.username}
                   </span>
 
-                  <button className="text-blue-600 text-sm hover:underline">
-                    Connect
-                  </button>
+                  <button
+  onClick={() => handleConnect(user.userId._id)}
+  className="text-blue-600 text-sm hover:underline"
+>
+  Connect
+</button>
 
                 </div>
 
