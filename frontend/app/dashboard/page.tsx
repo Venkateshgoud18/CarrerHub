@@ -122,7 +122,6 @@ useEffect(() => {
     fetchPosts();
   }, []);
 
-  // Filter users based on search
   const filteredUsers = users.filter((user) => {
     const name = user.userId?.name?.toLowerCase() || "";
     const username = user.userId?.username?.toLowerCase() || "";
@@ -174,7 +173,6 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900">
 
-      {/* Navbar */}
       <nav className="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
 
         <h1 className="text-xl font-bold text-blue-600">
@@ -209,10 +207,8 @@ useEffect(() => {
 
       </nav>
 
-      {/* Dashboard Layout */}
       <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6 mt-6 px-6">
 
-        {/* Left Sidebar */}
         <div className="col-span-3 space-y-4">
 
           <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -251,11 +247,8 @@ useEffect(() => {
 
         </div>
 
-        {/* Feed */}
         <div className="col-span-6 space-y-4">
 
-          {/* Create Post */}
-          {/* Create Post */}
 <div className="bg-white p-4 rounded-lg shadow-sm">
 
 <textarea
@@ -280,7 +273,6 @@ useEffect(() => {
 
 </div>
 
-          {/* Example Post */}
           {posts.map((post) => (
   <div key={post._id} className="bg-white p-4 rounded-lg shadow-sm">
 
@@ -328,7 +320,6 @@ useEffect(() => {
 
     </div>
 
-    {/* Comment Box */}
     {activeCommentPostId === post._id && (
   <div className="mt-4 space-y-3">
 
@@ -349,7 +340,6 @@ useEffect(() => {
 
         </div>
 
-        {/* Right Sidebar */}
         <div className="col-span-3">
 
           <div className="bg-white p-4 rounded-lg shadow-sm">
