@@ -221,7 +221,6 @@ export default function ProfilePage() {
 
     <div className="min-h-screen bg-gray-100 text-black">
 
-      {/* Navbar */}
       <nav className="bg-white shadow px-8 py-4 flex justify-between">
 
         <Link href="/dashboard" className="text-blue-600 font-bold text-xl">
@@ -268,7 +267,6 @@ export default function ProfilePage() {
 
           </div>
 
-          {/* Buttons */}
           <div className="mt-4 flex gap-3">
 
             <button
@@ -305,7 +303,6 @@ export default function ProfilePage() {
 
           </div>
 
-          {/* Bio */}
           <div className="mt-6">
 
             <h3 className="font-semibold text-lg mb-2">
@@ -331,7 +328,6 @@ export default function ProfilePage() {
 
           </div>
 
-          {/* Current Role */}
           <div className="mt-4">
 
             <h3 className="font-semibold">
@@ -357,7 +353,6 @@ export default function ProfilePage() {
 
           </div>
 
-          {/* Past Work */}
           <div className="mt-4">
 
             <h3 className="font-semibold">
@@ -385,7 +380,6 @@ export default function ProfilePage() {
 
           </div>
 
-          {/* Education */}
           <div className="mt-4">
 
             <h3 className="font-semibold">
@@ -413,7 +407,6 @@ export default function ProfilePage() {
 
           </div>
 
-          {/* Save Button */}
           {editing && (
 
             <button
