@@ -4,7 +4,6 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
 
-      {/* Navbar */}
       <nav className="flex justify-between items-center px-10 py-4 bg-white shadow-sm">
         <h1 className="text-2xl font-bold text-blue-600">CareerHub</h1>
 
@@ -25,10 +24,9 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="flex flex-col lg:flex-row items-center justify-between px-10 py-24 bg-gradient-to-b from-blue-50 to-white">
 
-        {/* Text */}
+
         <div className="max-w-xl">
 
           <h2 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
