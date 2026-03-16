@@ -71,7 +71,6 @@ export default function ConnectionsPage() {
         </div>
       </nav>
 
-      {/* PAGE */}
       <div className="max-w-3xl mx-auto mt-10 px-4">
 
         <h1 className="text-2xl font-bold text-gray-900 mb-6">

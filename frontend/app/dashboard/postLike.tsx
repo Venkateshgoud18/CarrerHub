@@ -26,7 +26,7 @@ export default function PostCard({ post }: { post: Post }) {
       );
 
       setLikes(res.data.post.likes);
-      setLiked(res.data.liked); // 🔥 important change
+      setLiked(res.data.liked); 
     } catch (error) {
       console.error("Error liking post", error);
     }

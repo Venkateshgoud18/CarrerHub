@@ -58,7 +58,6 @@ export default function Home() {
 
         </div>
 
-        {/* Image */}
         <img
           src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
           className="w-full max-w-lg mt-10 lg:mt-0 rounded-xl shadow-lg"
@@ -67,7 +66,6 @@ export default function Home() {
 
       </section>
 
-      {/* Features */}
       <section className="py-20 px-6 bg-white">
 
         <div className="text-center mb-12">
