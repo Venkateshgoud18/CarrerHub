@@ -4,7 +4,6 @@ export default function Join() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Navbar */}
       <nav className="flex justify-between items-center px-10 py-4 bg-white shadow-sm">
         <Link href="/">
           <h1 className="text-2xl font-bold text-blue-600 cursor-pointer">
@@ -29,7 +28,6 @@ export default function Join() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="flex flex-col lg:flex-row items-center justify-between px-10 py-24 bg-gradient-to-b from-blue-50 to-white">
 
         <div className="max-w-xl">
@@ -60,7 +58,6 @@ export default function Join() {
 
       </section>
 
-      {/* Stats */}
       <section className="max-w-6xl mx-auto py-16 grid md:grid-cols-3 gap-10 text-center">
 
         <div className="bg-white p-8 rounded-xl shadow-sm">
