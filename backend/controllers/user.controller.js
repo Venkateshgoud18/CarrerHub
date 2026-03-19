@@ -1,5 +1,5 @@
 import User from "../models/users.model.js";
-import Profile from "../models/profile.model.js";   // 🔥 Capital P
+import Profile from "../models/profile.model.js";   
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
@@ -42,14 +42,13 @@ export const register = async (req, res) => {
     try {
         const { name, email, password, username } = req.body;
 
-        // 🔎 Validate required fields
         if (!name || !email || !password || !username) {
             return res.status(400).json({ 
                 message: "All fields are required" 
             });
         }
 
-        // 🔎 Check if user already exists
+
         const existingUser = await User.findOne({
             $or: [{ email }, { username }]
         });
