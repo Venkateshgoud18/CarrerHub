@@ -12,12 +12,11 @@ dotenv.config();
 
 const app = express();
 
-// CORS configuration
 app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      process.env.FRONTEND_URL, // Vercel frontend URL
+      process.env.FRONTEND_URL, 
     ],
     credentials: true,
   })
