@@ -22,18 +22,14 @@ app.use(
   })
 );
 
-// Needed for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Static uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
 app.use(postRoutes);
 app.use(userRoutes);
 
