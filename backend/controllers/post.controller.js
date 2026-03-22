@@ -33,7 +33,7 @@ export const getAllPosts = async (req, res) => {
   
       const posts = await Post.find()
         .populate("userId", "name email")
-        .populate("comments.userId", "name email")   // IMPORTANT
+        .populate("comments.userId", "name email")   
         .sort({ createdAt: -1 });
   
       res.status(200).json({
@@ -92,7 +92,7 @@ export const commentPost = async (req, res) => {
 
         post.comments.push({
             userId: user._id,
-            comment: req.body.body  // ✅ FIXED (must match schema)
+            comment: req.body.body  
         });
 
         await post.save();
