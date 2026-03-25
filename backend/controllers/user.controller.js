@@ -120,8 +120,7 @@ export const login = async (req, res) => {
         const token=crypto.randomBytes(64).toString("hex");
         user.token = token;
         await user.save();
-        // Generate token logic here (e.g., JWT)
-        // const token = generateToken(user._id);
+
 
         return res.status(200).json({
             message: "Login successful",
