@@ -181,7 +181,6 @@ export const updateUserProfile = async (req, res) => {
 
         const { username, email, name } = req.body;
 
-        // 🔎 Check if username/email already exists for another user
         if (username || email) {
             const existingUser = await User.findOne({
                 $or: [
@@ -198,7 +197,6 @@ export const updateUserProfile = async (req, res) => {
             }
         }
 
-        // 🔐 Update only allowed fields
         if (name) user.name = name;
         if (email) user.email = email;
         if (username) user.username = username;
