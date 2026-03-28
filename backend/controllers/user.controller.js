@@ -467,12 +467,11 @@ export const respondToConnectionRequest = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // ❌ Cannot respond to yourself
+
         if (user._id.equals(connectionUser._id)) {
             return res.status(400).json({ message: "Invalid operation" });
         }
 
-        // ✅ Check if request actually exists
         const requestExists = user.connectionRequests.some(id =>
             id.equals(connectionUser._id)
         );
@@ -484,7 +483,7 @@ export const respondToConnectionRequest = async (req, res) => {
         }
 
         if (accept) {
-            // ✅ Add to connections (avoid duplicates)
+
             if (!user.connections.some(id => id.equals(connectionUser._id))) {
                 user.connections.push(connectionUser._id);
             }
