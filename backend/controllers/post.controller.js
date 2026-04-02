@@ -154,12 +154,10 @@ export const deleteComment = async (req, res) => {
             return res.status(404).json({ message: "Comment not found" });
         }
 
-        // Cleaner ObjectId comparison
         if (!comment.userId.equals(user._id)) {
             return res.status(403).json({ message: "Forbidden" });
         }
 
-        // ✅ Safe removal
         post.comments = post.comments.filter(
             c => c._id.toString() !== req.params.commentId
         );
