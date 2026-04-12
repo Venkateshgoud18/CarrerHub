@@ -114,7 +114,6 @@ export const getUserPostComments = async (req, res) => {
       const posts = await Post.find({ userId })
         .populate("comments.userId", "name email");
   
-      // collect all comments
       const comments = posts.flatMap(post =>
         post.comments.map(c => ({
           postId: post._id,
