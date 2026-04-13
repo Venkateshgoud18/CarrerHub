@@ -67,12 +67,11 @@ export const register = async (req, res) => {
             password: hashedPassword,
             username,
             profilePicture: "default.jpg",
-            token: ""   // initialize empty token
+            token: ""  
         });
 
         await newUser.save();
 
-        // 📄 Create profile document
         const newProfile = new Profile({
             userId: newUser._id
         });
