@@ -33,7 +33,6 @@ app.use(cookieParser());
 app.use(postRoutes);
 app.use(userRoutes);
 
-// MongoDB connection
 async function connectDB() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -46,7 +45,6 @@ async function connectDB() {
 
 connectDB();
 
-// Port (important for deployment platforms)
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
