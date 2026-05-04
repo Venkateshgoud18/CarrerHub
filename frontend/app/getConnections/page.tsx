@@ -66,7 +66,6 @@ export default function GetConnections() {
   
       console.log(data);
   
-      // remove accepted request from UI
       setRequests((prev) =>
         prev.filter((user) => user._id !== userId)
       );
